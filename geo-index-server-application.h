@@ -19,7 +19,7 @@ class GeoIndexServerApplication: public ServerApplication
     GeoIndexServerApplication():
       _helpRequested(false),
       m_registry(std::make_unique<GeoIndexRegistry>()),
-      m_redisClient(std::make_unique<Client>("127.0.0.1", 6379)) { }
+      m_redisClient(std::make_unique<Client>("127.0.0.1", 9851)) { }
     ~GeoIndexServerApplication() { }
 
   protected:

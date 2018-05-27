@@ -4,6 +4,7 @@
 
 #include <Poco/UUIDGenerator.h>
 #include <Poco/JSON/Parser.h>
+#include <Poco/Redis/Type.h>
 
 #include <s2/s2latlng.h>
 
@@ -47,9 +48,9 @@ int RedisCreateIndexRequestHandler::CreateIndex(const std::string &input, const 
     const std::string &lng = log->get(2).toString();
 
     Poco::Redis::Array cmd;
-    cmd << "geoadd" << indexId << lng << lat << id;
-    auto res = m_redisClient->execute<Poco::Int64>(cmd);
-    ret += res;
+    cmd << "SET" << indexId << id << "POINT" << lat << lng;
+    auto res = m_redisClient->execute<std::string>(cmd);
+    ret += 1;
   }
   m_performanceLogger.finish("build-index");
 

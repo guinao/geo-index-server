@@ -16,6 +16,9 @@
 
 #include "query-index-redis.h"
 
+using Poco::JSON::Parser;
+using Poco::JSON::Object;
+
 const std::regex UUID_REGEX("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
 const double DEFAULT_RADIUS = 100.00;
 
@@ -61,27 +64,43 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
     std::cout << "Radius: " << radius << std::endl;
 #endif // DEBUG
 
+    Poco::Redis::Array cmd;
+    cmd << "NEARBY" << matchUUID.str() << "LIMIT" << std::to_string(count) << "POINT" << std::to_string(latitude) << std::to_string(longitude);
+    auto ret = m_redisClient->execute<std::string>(cmd);
     // Build the query
-    auto queryResult = knnQuery(matchUUID.str(), std::to_string(longitude), std::to_string(latitude), count , radius);
+//    auto queryResult = knnQuery(matchUUID.str(), std::to_string(longitude), std::to_string(latitude), count , radius);
     
-    const int size = queryResult.size();
+//    const int size = queryResult.size();
 
     response.setContentType("text/json");
 
     // Generate the output
     Poco::JSON::Object result;
     result.set("id", matchUUID.str());
-    result.set("count", queryResult.size());
+    result.set("count", count);
     for (auto &pair: m_performanceLogger) {
       result.set(pair.first, pair.second);
     }
 
+    Parser parser;
+    Poco::Dynamic::Var parsedResult = parser.parse(ret);
+    Poco::JSON::Object::Ptr object = parsedResult.extract<Object::Ptr>();
+    Poco::JSON::Array::Ptr jsonPoints = object->getArray("objects");
+
     Poco::JSON::Array points;
-    for(const GeoPoint& p : queryResult) {
+    for(int i=0; i<(int)jsonPoints->size(); ++i) {
+      auto p = jsonPoints->getObject(i);
       Poco::JSON::Object point;
-      point.set("id", p.first);
-      point.set("latitude", p.second.second);
-      point.set("longitude", p.second.first);
+
+      std::string pid = p->getValue<std::string>("id");
+      point.set("id", pid);
+      
+      Poco::Dynamic::Var subObject = p->get("object");
+      Object::Ptr coords = subObject.extract<Object::Ptr>();
+      Poco::JSON::Array::Ptr theCoords = coords->getArray("coordinates");
+
+      point.set("latitude", theCoords->get(1));
+      point.set("longitude", theCoords->get(0));
       points.add(point);
     }
     result.set("points", points);

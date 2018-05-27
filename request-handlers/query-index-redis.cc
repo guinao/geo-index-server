@@ -87,17 +87,23 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
     Poco::JSON::Object::Ptr object = parsedResult.extract<Object::Ptr>();
     Poco::JSON::Array::Ptr jsonPoints = object->getArray("objects");
 
+    std::cout << "Here1" << std::endl;
     Poco::JSON::Array points;
     for(int i=0; i<(int)jsonPoints->size(); ++i) {
       auto p = jsonPoints->getObject(i);
       Poco::JSON::Object point;
+      std::cout << "Here2" << std::endl;
 
       std::string pid = p->getValue<std::string>("id");
       point.set("id", pid);
+      std::cout << "Here3" << std::endl;
       
       Poco::Dynamic::Var subObject = p->get("object");
+      std::cout << "Here4" << std::endl;
       Object::Ptr coords = subObject.extract<Object::Ptr>();
+      std::cout << "Here5" << std::endl;
       Poco::JSON::Array::Ptr theCoords = coords->getArray("coordinates");
+      std::cout << "Here6" << std::endl;
 
       point.set("latitude", theCoords->get(1));
       point.set("longitude", theCoords->get(0));

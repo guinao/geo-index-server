@@ -66,6 +66,7 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
 
     Poco::Redis::Array cmd;
     cmd << "NEARBY" << matchUUID.str() << "LIMIT" << std::to_string(count) << "POINT" << std::to_string(latitude) << std::to_string(longitude);
+    std::cout << cmd.toString() << std::endl;
     auto ret = m_redisClient->execute<std::string>(cmd);
     // Build the query
 //    auto queryResult = knnQuery(matchUUID.str(), std::to_string(longitude), std::to_string(latitude), count , radius);
@@ -81,6 +82,8 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
     for (auto &pair: m_performanceLogger) {
       result.set(pair.first, pair.second);
     }
+
+    std::cout << "Here0" << std::endl;
 
     Parser parser;
     Poco::Dynamic::Var parsedResult = parser.parse(ret);

@@ -8,6 +8,7 @@
 #include <Poco/JSON/Parser.h>
 #include <Poco/URI.h>
 #include <Poco/Redis/Type.h>
+#include <Poco/Redis/Exception.h>
 
 #include <s2/s1angle.h>
 #include <s2/s2latlng.h>
@@ -68,7 +69,12 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
     // cmd << "NEARBY" << matchUUID.str() << "LIMIT" << std::to_string(count) << "POINT" << std::to_string(latitude) << std::to_string(longitude);
     cmd << "NEARBY" << "18105e3a-6180-11e8-882c-000d3aa0926a" << "LIMIT" << "100" << "POINT" << "31.2304" << "121.473";
     std::cout << cmd.toString() << std::endl;
-    auto ret = m_redisClient->execute<std::string>(cmd);
+    try{
+      auto ret = m_redisClient->execute<std::string>(cmd);
+    }catch(RedisException e){
+      std::cout << e.what() << std::endl;
+    }
+    
     // Build the query
 //    auto queryResult = knnQuery(matchUUID.str(), std::to_string(longitude), std::to_string(latitude), count , radius);
     
